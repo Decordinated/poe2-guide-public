@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+import shutil
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -12,6 +13,8 @@ PUBLIC_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_SOURCE = PUBLIC_ROOT.parent / "poe2-guide"
 SOURCE = Path(sys.argv[1]).expanduser().resolve() if len(sys.argv) > 1 else DEFAULT_SOURCE.resolve()
 OUT = PUBLIC_ROOT / "public" / "data" / "content.json"
+ASSET_OUT = OUT.parent / "assets"
+PUBLIC_IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
 
 
 def read_text(path: Path) -> str:
@@ -37,10 +40,34 @@ def make_summary(markdown: str) -> str:
     return value[:240] + ("…" if len(value) > 240 else "")
 
 
+def publish_assets(video_dir: Path, video_id: str, markdown: str) -> str:
+    source_dir = video_dir / "assets"
+    if not source_dir.is_dir():
+        return markdown
+
+    target_dir = ASSET_OUT / video_id
+    for source in source_dir.rglob("*"):
+        if not source.is_file() or source.suffix.lower() not in PUBLIC_IMAGE_EXTENSIONS:
+            continue
+        relative = source.relative_to(source_dir)
+        target = target_dir / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, target)
+
+    return re.sub(
+        r"(!\[[^\]]*\]\()assets/",
+        rf"\1data/assets/{video_id}/",
+        markdown,
+    )
+
+
 def main() -> None:
     youtuber = SOURCE / "youtuber"
     if not youtuber.is_dir():
         raise SystemExit(f"Missing source archive: {youtuber}")
+
+    if ASSET_OUT.exists():
+        shutil.rmtree(ASSET_OUT)
 
     videos = []
     for channel_dir in sorted(p for p in youtuber.iterdir() if p.is_dir()):
@@ -59,6 +86,8 @@ def main() -> None:
             if not meta_path.exists() or not tips:
                 continue
             meta = json.loads(meta_path.read_text(encoding="utf-8"))
+            tips = publish_assets(video_dir, video_id, tips)
+            craft = publish_assets(video_dir, video_id, craft)
             videos.append({
                 "id": video_id,
                 "channel": meta.get("channel") or channel_dir.name,
