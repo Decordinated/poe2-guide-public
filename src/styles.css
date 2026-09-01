@@ -149,6 +149,7 @@ footer p { margin: 0; }
 .markdown-body code { font-family: 'Geist Mono', monospace; font-size: .87em; color: #d6ff72; background: #171a1f; padding: 2px 5px; }
 .markdown-body pre { overflow-x: auto; background: #111318; border: 1px solid var(--line); padding: 18px; }
 .markdown-body pre code { padding: 0; background: transparent; }
+.markdown-body img { display: block; width: 100%; max-width: 100%; height: auto; margin: 24px 0 10px; border: 1px solid var(--line); border-radius: 14px; background: #090a0d; }
 .markdown-body hr { border: 0; border-top: 1px solid var(--line); margin: 44px 0; }
 .markdown-body table { width: 100%; border-collapse: collapse; display: block; overflow-x: auto; margin: 22px 0 30px; font-size: 13px; }
 .markdown-body th, .markdown-body td { min-width: 130px; padding: 11px 13px; border: 1px solid var(--line); text-align: left; vertical-align: top; }
